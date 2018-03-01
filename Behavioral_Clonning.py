@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[6]:
+# In[19]:
 
 # coding: utf-8
 
@@ -105,6 +105,9 @@ for line in lines:
     measurement = float(line[3])
     #c = np.random.randint(3)
     c = 0
+    if (measurement == 0) :
+        if (np.random.choice(4, 1)[0] != 0):
+            continue
     if (measurement != 0) :
         if (np.random.choice(2, 1)[0]):
             c = 1
@@ -135,7 +138,7 @@ plt.plot((np.min(measurements), np.max(measurements)), (avg_samples_per_bin, avg
 plt.show()
 
 
-# In[7]:
+# In[20]:
 
 
 # split into train/test sets
@@ -149,20 +152,21 @@ from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda, Cropping2D
 from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
+from keras.regularizers import l2
 
 model = Sequential()
 model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=(66,200,3)))
 #model.add(Cropping2D(cropping=((40,25),(0,0))))
-model.add(Convolution2D(24, 5, 5, subsample=(2,2), border_mode='valid', activation="relu"))
-model.add(Convolution2D(36, 5, 5, subsample=(2,2), border_mode='valid', activation="relu"))
-model.add(Convolution2D(48, 5, 5, subsample=(2,2), border_mode='valid', activation="relu"))
+model.add(Convolution2D(24, 5, 5, subsample=(2,2), border_mode='valid', activation="relu", W_regularizer=l2(0.001)))
+model.add(Convolution2D(36, 5, 5, subsample=(2,2), border_mode='valid', activation="relu", W_regularizer=l2(0.001)))
+model.add(Convolution2D(48, 5, 5, subsample=(2,2), border_mode='valid', activation="relu", W_regularizer=l2(0.001)))
 
-model.add(Convolution2D(64, 3, 3, border_mode='valid', activation="relu"))
-model.add(Convolution2D(64, 3, 3, border_mode='valid', activation="relu"))
+model.add(Convolution2D(64, 3, 3, border_mode='valid', activation="relu", W_regularizer=l2(0.001)))
+model.add(Convolution2D(64, 3, 3, border_mode='valid', activation="relu", W_regularizer=l2(0.001)))
 model.add(Flatten())
-model.add(Dense(100))
-model.add(Dense(50))
-model.add(Dense(10))
+model.add(Dense(100, W_regularizer=l2(0.001)))
+model.add(Dense(50, W_regularizer=l2(0.001)))
+model.add(Dense(10, W_regularizer=l2(0.001)))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
@@ -175,7 +179,7 @@ val_gen = generate_training_data(image_paths_valid, angles_valid, validation_fla
 
 s_per_epoch = ((int)(len(angles_train) / 64) + 1) * 64
 model.fit_generator(train_gen, validation_data=val_gen, nb_val_samples=len(angles_valid), samples_per_epoch=s_per_epoch,
-                    nb_epoch=5, verbose=1)
+                    nb_epoch=20, verbose=1)
 
 print(model.summary())
 
