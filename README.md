@@ -56,17 +56,17 @@ The model.py file contains the code for training and saving the convolution neur
 
 #### 1. An appropriate model architecture has been employed
 
-The project instructions from Udacity suggest starting from a known self-driving car model and provided a link to the [nVidia model](https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf) - the diagram below is a depiction of the nVidia model architecture.
+The project instructions from Udacity suggest starting from a known self-driving car model and provided a link to the [nVidia model](https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf) - the diagram below is a depiction of the nVidia model architecture. So, I have used this model as my starting CNN.
 
 ![nVidia CNN Model][image1]
 
 #### 2. Attempts to reduce overfitting in the model
 
-I initially used dropout layers. But was not getting good performance. Then changed to  L2 regularization (lambda of 0.001) to all model layers - convolutional and fully-connected as discussed in the forum. To reduce overfitting, the trained and validated on different data sets.
+I initially used dropout layers. But was not getting good performance. Then changed to  L2 regularization (lambda of 0.001) to all model layers - convolutional and fully-connected as discussed in the forum. To reduce overfitting, the model was trained and validated on different data sets.
 
 #### 3. Model parameter tuning
 
-The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 173). I have played arund with the L2 regularization lamda ana epochs. Finally, set them to 0.001 and 20 respectively.
+The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 173). I have played around with the L2 regularization lamda and epochs. Finally, set them to 0.001 and 20 respectively.
 
 #### 4. Appropriate training data
 
@@ -80,7 +80,7 @@ For details about how I created the training data, see the next section.
 
 #### 1. Solution Design Approach
 
-The simulated car is equipped with three cameras, one to the left, one in the center and one to the right of the driver that provide images from these different view points. The first track has sharp corners, exits, entries, bridges and changing light conditions. An additional track exists with changing elevations, even sharper turns. It is thus crucial that the CNN is generalized enough to drive autonously on these varity of track condition. My model is trained using both the tracks and then it is able to drive them autonomously.
+The simulated car is equipped with three cameras, one to the left, one in the center and one to the right of the driver that provide images from these different view points. The first track has sharp corners, a mud road beside the track, bridges and changing light conditions. An additional track exists with changing elevations, even sharper turns. It is thus crucial that the CNN is generalized enough to drive autonously on these varity of track conditions. My model is trained using both the tracks and then it is able to drive them autonomously.
 
 The main problem lies in the skew and bias of the data set. Shown below is a histogram of the steering angles recorded while driving in the middle of the road for a few laps. This is also the data used for training. The left-right skew is less problematic and can be eliminated by flipping images and steering angles simultaneously. However, even after balancing left and right angles most of the time the steering angle during normal driving is small or zero and thus introduces a bias towards driving straight. The most important events however are those when the car needs to turn sharply.
 
@@ -94,9 +94,9 @@ The final model architecture (model.py lines 159-179) consisted of a convolution
 
 ![My Model][image2]
 
-The model first uses a Keras Lambda layer for normalization . hen I have three 5x5 convolution layers, two 3x3 convolution layers, and three fully-connected layers - as described in the Nvidia paper text - including converting from RGB to YUV color space, and 2x2 striding on the 5x5 convolutional layers. The model includes RELU layers to introduce nonlinearity (model.py line 159-171). 
+The model first uses a Keras Lambda layer for normalization . Then I have three 5x5 convolution layers, two 3x3 convolution layers, and three fully-connected layers - as described in the Nvidia paper text - including converting from RGB to YUV color space, and 2x2 striding on the 5x5 convolutional layers. The model includes RELU layers to introduce nonlinearity (model.py line 159-171). 
 
-Since the top portion of the image has mountain, sky etc and bottom portion has car hood I thought of cropping the image by 1/4 from top and 25 pixel from bottom. Otherwise these portion istead of helping would distract the model. Some, example cropped images are displayed below:
+Since the top portion of the image has mountain, sky etc and bottom portion has car hood I thought of cropping the image by 1/4 from top and 25 pixel from bottom. Otherwise these portions istead of helping would distract the model. Some, example cropped images are displayed below:
 
 ![Cropped Image][image7]
 
@@ -118,7 +118,7 @@ This modification was inspired by [Vivek's model](https://chatbotslife.com/using
 
 ![Random Translation][image6]
 
-Apart from these to remove the skewed data as described above I have used
+Apart from these to remove the skewed data as described above I have used,
 
 ##### Flipping
 
@@ -126,22 +126,22 @@ For any images with absolute turning angle greater than 0.1 added a flipped imag
 
 ##### Using left and right camera images
 
-To further add data with nonzero driving angle I have randomly added left or right camera images for images with non zero angle. Before adding those images to test set their abgles are properly adjusted with an offset (0.25 for left camera and -0.25 for right camera image). Note the code also keeps the center image for that instance.
+To further add data with nonzero driving angle I have randomly added left or right camera images for images with non zero angle. Before adding those images to test set their angles are properly adjusted with an offset (0.25 for left camera and -0.25 for right camera image). Note the code also keeps the center image for that instance.
 
 ##### Keras generator for subsampling
 
-When working with datasets that have a large memory footprint (large quantities of image data, in particular) Keras python generators are a convenient way to load the dataset one batch at a time rather than loading it all at once. I have used Keras  fit_generator() and generator code to feed batches of processed the images into the model. The way we apply the generator with augmentation is:
+When working with datasets that have a large memory footprint (large quantities of image data, in particular) Keras python generators are a convenient way to load the dataset one batch at a time rather than loading it all at once. I have used Keras  fit_generator() and generator code to feed batches of processed images into the model. The way we apply the generator with augmentation is:
 
 Generator > Pick out a batch of random images from the original training data > Apply random augmentation > Feed to the model to train > Model is done training with that batch, destroy the data > Repeat the process
 
 
 #### 4. Creation of the Training Set & Training Process
 
-My first raw training data was gathered by driving the car as smoothly as possible right in the middle of the road for 3 in one direction in the first track. I have also captured few manual recovery events at the turns. Othehr recovery was simulated using shifts, flip, left/right camera images etc.
+My first raw training data was gathered by driving the car as smoothly as possible right in the middle of the road for 3 laps in one direction in the first track. I have also captured few manual recovery events at the turns. Other recovery instances were simulated using shifts, flip, left/right camera images etc.
 
 The model performed well in the first track autonomously but failed terribly in the second track. Then I updated my training data by 2 laps of second track and one or two manual recovery from it. With this data set the model successfully drove the car in both tracks at speed 9.
 
-But if I increase speed to 20+ it was failing in second track. I realised that the model is still suffereing from bias towards driving straight. So, I downsampled the samples with 0 steering angle to 25%. iven below is a histogram after down smapling (but with filpping - as flipping is done inside the generator a running time)
+But if I increase speed to 20+ it was failing in second track. I realised that the model is still suffereing from bias towards driving straight. So, I downsampled the images with 0 steering angle to 25%. Given below is a histogram after down sampling (but with filpping - as flipping is done inside the generator a running time)
 
 ![Partially augmented data][image4]
 
